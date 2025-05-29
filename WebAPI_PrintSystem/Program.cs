@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebAPI_PrintSystem.Services;
+using PrintSystem.DAL;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,8 +13,8 @@ builder.Services.AddScoped<ISqlService, SqlService>();
 builder.Services.AddScoped<IPaymentDBService, PaymentDBService>();
 builder.Services.AddScoped<IADService, ADService>();
 
-builder.Services.AddDbContext<PrintSystemDB>(options =>
-    options.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=DigitecDB;Trusted_Connection=True;"));
+builder.Services.AddDbContext<PrintSystemContext>(options =>
+    options.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=PrintSystemDB;Trusted_Connection=True;"));
 
 // HTTP Client for SAP HR
 builder.Services.AddHttpClient<ISAPHRService, SAPHRService>();
