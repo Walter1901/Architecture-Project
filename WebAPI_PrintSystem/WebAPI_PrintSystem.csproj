@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MVC_PrintSystem\MVC_PrintSystem.csproj" />
+    <ProjectReference Include="..\PrintSystem.BLL\PrintSystem.BLL.csproj" />
     <ProjectReference Include="..\PrintSystem.DAL\PrintSystem.DAL.csproj" />
     <ProjectReference Include="..\PrintSystem.Models\PrintSystem.Models.csproj" />
   </ItemGroup>

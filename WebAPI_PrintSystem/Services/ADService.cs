@@ -1,4 +1,6 @@
-﻿namespace WebAPI_PrintSystem.Services
+﻿using PrintSystem.Models.Interfaces;
+
+namespace WebAPI_PrintSystem.Services
 {
     public class ADService : IADService
     {
