@@ -30,6 +30,34 @@ namespace PrintSystem.DAL
         {
             base.OnModelCreating(modelBuilder);
             
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Debit)
+                .WithMany()
+                .HasForeignKey(p => p.DebitAccountId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Payment>()
+                .HasOne(p => p.Credit)
+                .WithMany()
+                .HasForeignKey(p => p.CreditAccountId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            
+            modelBuilder.Entity<Student>()
+                .HasOne(s => s.PrintAccount)
+                .WithMany()
+                .HasForeignKey(s => s.printAccountId)
+                .OnDelete(DeleteBehavior.Cascade); 
+
+           
+            modelBuilder.Entity<Faculty>()
+                .HasOne(f => f.Account)
+                .WithMany()
+                .HasForeignKey(f => f.AccountId)
+                .OnDelete(DeleteBehavior.Restrict); 
+
+
+
         }
 
     }

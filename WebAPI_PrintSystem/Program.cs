@@ -33,6 +33,12 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+using (var scope = app.Services.CreateScope())
+{
+    var dbContext = scope.ServiceProvider.GetRequiredService<PrintSystemContext>();
+    dbContext.Database.EnsureCreated(); // Ensure the database is created and migrated
+}
+
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();

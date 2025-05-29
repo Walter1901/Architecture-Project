@@ -8,7 +8,7 @@ namespace PrintSystem.DAL.Models
 {
     public class PrintQuota
     {
-        public int PrintQuoteId { get; set; }
+        public int PrintQuotaId { get; set; }
         public string Description { get; set; }
         public double Amount { get; set; }
         public int FacultyId { get; set; }
