@@ -1,5 +1,5 @@
 ﻿using System.Text.Json;
-using WebAPI_PrintSystem.Models;
+using PrintSystem.Models.Interfaces;
 
 namespace WebAPI_PrintSystem.Services
 {

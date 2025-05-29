@@ -1,6 +1,6 @@
 ﻿using PrintSystem.DAL.Interfaces;
 using PrintSystem.DAL.Repositories;
-using PrintSystem.Models.;
+using PrintSystem.Models;
 
 namespace PrintSystem.DAL
 {

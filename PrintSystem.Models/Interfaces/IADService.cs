@@ -1,4 +1,6 @@
-﻿namespace WebAPI_PrintSystem.Services
+﻿using System.Threading.Tasks;
+
+namespace PrintSystem.Models.Interfaces
 {
     public interface IADService
     {
