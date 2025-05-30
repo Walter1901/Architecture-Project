@@ -1,6 +1,11 @@
 using Microsoft.EntityFrameworkCore;
 using WebAPI_PrintSystem.Services;
 using PrintSystem.DAL;
+using PrintSystem.BLL.Interfaces;
+using PrintSystem.BLL.Services;
+using PrintSystem.DAL.Interfaces;
+using PrintSystem.DAL.Repositories;
+using PrintSystem.Models.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -8,43 +13,64 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Custom Services
+// Legacy Services - kept for backward compatibility
 builder.Services.AddScoped<ISqlService, SqlService>();
 builder.Services.AddScoped<IPaymentDBService, PaymentDBService>();
-builder.Services.AddScoped<IADService, ADService>();
 
+// Business Logic Layer Services
+builder.Services.AddScoped<IQuotaService, QuotaService>();
+builder.Services.AddScoped<IPaymentService, PaymentService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+// Data Access Layer Repositories
+builder.Services.AddScoped<IQuotaRepository>(provider =>
+    new QuotaRepository(provider.GetService<IConfiguration>()
+        .GetConnectionString("DefaultConnection")));
+
+builder.Services.AddScoped<IPaymentRepository>(provider =>
+    new PaymentRepository(provider.GetService<IConfiguration>()
+        .GetConnectionString("DefaultConnection")));
+
+// External Services
+builder.Services.AddScoped<PrintSystem.Models.Interfaces.IADService, ADService>();
+builder.Services.AddScoped<PrintSystem.Models.Interfaces.ISAPHRService, SAPHRService>();
+
+// Database Context
 builder.Services.AddDbContext<PrintSystemContext>(options =>
     options.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=PrintSystemDB;Trusted_Connection=True;"));
 
-// HTTP Client for SAP HR
-builder.Services.AddHttpClient<ISAPHRService, SAPHRService>();
-builder.Services.AddScoped<ISAPHRService, SAPHRService>();
+// HTTP Client for SAP HR Service
+builder.Services.AddHttpClient<PrintSystem.Models.Interfaces.ISAPHRService, SAPHRService>();
 
-// CORS policy
+// CORS policy for MVC application
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowMVC", policy =>
     {
-        policy.WithOrigins("https://localhost:7001", "http://localhost:5001")
-               .AllowAnyMethod()
-               .AllowAnyHeader();
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod()
+              .AllowAnyHeader();
     });
 });
 
+
 var app = builder.Build();
 
+// Ensure database is created
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<PrintSystemContext>();
-    dbContext.Database.EnsureCreated(); // Ensure the database is created and migrated
+    dbContext.Database.EnsureCreated();
 }
 
+// Configure development environment
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
+// Configure HTTP pipeline
 app.UseHttpsRedirection();
 app.UseCors("AllowMVC");
 app.UseAuthorization();
