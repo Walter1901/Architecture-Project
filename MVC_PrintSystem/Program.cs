@@ -11,6 +11,12 @@ builder.Services.AddHttpClient<IWebAPIService, WebAPIService>(client =>
 });
 
 builder.Services.AddScoped<IWebAPIService, WebAPIService>();
+builder.Services.AddScoped<ILoginService, LoginService>();
+builder.Services.AddScoped<IStudentHomeServices, StudentHomeService>();
+builder.Services.AddScoped<IStudentPrintPaymentServices, StudentPrintPaymentService>();
+builder.Services.AddScoped<IFacultyHomeServices, FacultyHomeService>();
+builder.Services.AddScoped<IFacultyStudentPrintPaymentServices, FacultyStudentPrintPaymentService>();
+builder.Services.AddScoped<IStudentsListServices, StudentsListService>();
 
 var app = builder.Build();
 
@@ -28,5 +34,25 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "facultyManagement",
+    pattern: "{controller=FacultyManagement}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "users",
+    pattern: "{controller=Users}/{action=GetUsername}/{id?}");
+
+app.MapControllerRoute(
+    name: "quota",
+    pattern: "{controller=Quota}/{action=AddQuota}/{id?}");
+
+app.MapControllerRoute(
+    name: "payment",
+    pattern: "{controller=Payment}/{action=ProcessPayment}/{id?}");
+
+app.MapControllerRoute(
+    name: "login",
+    pattern: "{controller=Login}/{action=Index}/{id?}");
 
 app.Run();

@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Available Quota";
+}
+
+<h2>Available Quota</h2>
+
+<form asp-action="AvailableQuota" method="get">
+    <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Check Quota</button>
+</form>
+
+@if (ViewBag.Quota != null)
+{
+    <div class="alert alert-info">Available Quota: @ViewBag.Quota</div>
+}

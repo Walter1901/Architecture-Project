@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using MVC_PrintSystem.Models.ViewModels;
 using MVC_PrintSystem.Services;
 
 namespace MVC_PrintSystem.Controllers
@@ -16,7 +17,7 @@ namespace MVC_PrintSystem.Controllers
         {
             try
             {
-                var username = "DefaultUser"; // You can get this from user claims later
+                var username = User.Identity?.Name;
                 var availableAmount = await _webAPIService.GetAvailableAmountAsync(username);
                 ViewBag.Username = username;
                 ViewBag.AvailableAmount = availableAmount;
@@ -35,22 +36,21 @@ namespace MVC_PrintSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> PayOnline(float amount)
+        public async Task<IActionResult> PayOnline(TopUpViewModel model)
         {
-            if (amount <= 0)
+            if (!ModelState.IsValid)
             {
-                ModelState.AddModelError("", "Please provide a valid amount");
-                return View();
+                return View(model);
             }
 
             try
             {
-                var username = "DefaultUser"; // You can get this from user claims later
-                var result = await _webAPIService.ProcessOnlinePaymentAsync(username, amount);
+                var username = User.Identity?.Name;
+                var result = await _webAPIService.ProcessOnlinePaymentAsync(username, model.Amount);
 
                 if (result.Success)
                 {
-                    TempData["Success"] = $"Payment of {amount} CHF processed successfully";
+                    TempData["Success"] = $"Payment of {model.Amount} CHF processed successfully";
                     return RedirectToAction("Dashboard");
                 }
 
@@ -61,7 +61,7 @@ namespace MVC_PrintSystem.Controllers
                 ModelState.AddModelError("", "Payment error: " + ex.Message);
             }
 
-            return View();
+            return View(model);
         }
     }
 }

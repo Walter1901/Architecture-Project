@@ -16,6 +16,6 @@ namespace PrintSystem.DAL.Models
         public int printAccountId { get; set; }
         public Account PrintAccount { get; set; }
 
-
+        public override string GetUserRole() => "Student";
     }
 }

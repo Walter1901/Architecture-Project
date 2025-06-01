@@ -101,5 +101,34 @@ namespace MVC_PrintSystem.Services
                 return new List<User>();
             }
         }
+
+        public async Task<ApiResponse> AddFacultyAsync(string facultyName)
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/faculty/add", new { Name = facultyName });
+            return await response.Content.ReadFromJsonAsync<ApiResponse>();
+        }
+
+        public async Task<string> GetUsernameAsync(string uid)
+        {
+            var response = await _httpClient.GetAsync($"api/users/username/{uid}");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                var result = JsonSerializer.Deserialize<dynamic>(content);
+                return result?.Username;
+            }
+            return null;
+        }
+
+        public async Task<User> GetUserDetailsAsync(string username)
+        {
+            var response = await _httpClient.GetAsync($"api/users/details/{username}");
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<User>(content, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+            }
+            return null;
+        }
     }
 }

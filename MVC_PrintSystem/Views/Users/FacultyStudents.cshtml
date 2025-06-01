@@ -1,0 +1,28 @@
+@using PrintSystem.Models
+@model List<User>
+
+@{
+    ViewData["Title"] = "Faculty Students";
+}
+
+<h2>Faculty Students</h2>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Faculty</th>
+            <th>Available Quota</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var student in Model)
+        {
+            <tr>
+                <td>@student.Username</td>
+                <td>@student.Faculty</td>
+                <td>@student.AvailableQuota</td>
+            </tr>
+        }
+    </tbody>
+</table>

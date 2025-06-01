@@ -59,5 +59,25 @@ namespace WebAPI_PrintSystem.Controllers
                 return StatusCode(500, new { Error = ex.Message });
             }
         }
+
+        [HttpGet("details/{username}")]
+        public async Task<IActionResult> GetUserDetails(string username)
+        {
+            try
+            {
+                // Mock data for testing
+                var user = new User
+                {
+                    Username = username,
+                    Role = username.Contains("faculty") ? "Faculty" : "Student" // Add role information
+                };
+
+                return Ok(user);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { Error = ex.Message });
+            }
+        }
     }
 }

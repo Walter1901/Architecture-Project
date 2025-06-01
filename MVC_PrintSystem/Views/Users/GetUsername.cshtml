@@ -1,0 +1,18 @@
+@{
+    ViewData["Title"] = "Get Username";
+}
+
+<h2>Get Username</h2>
+
+<form asp-action="GetUsername" method="post">
+    <div class="form-group">
+        <label for="uid">UID</label>
+        <input type="text" id="uid" name="uid" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Fetch Username</button>
+</form>
+
+@if (ViewBag.Username != null)
+{
+    <div class="alert alert-success">Username: @ViewBag.Username</div>
+}

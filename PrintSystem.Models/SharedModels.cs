@@ -9,6 +9,7 @@ namespace PrintSystem.Models
         public float AvailableQuota { get; set; }
         public string Faculty { get; set; } = string.Empty;
         public DateTime LastUpdated { get; set; }
+        public string Role { get; set; } = string.Empty;
     }
 
     public class QuotaAllocation

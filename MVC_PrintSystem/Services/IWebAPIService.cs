@@ -8,5 +8,8 @@ namespace MVC_PrintSystem.Services
         Task<float> GetAvailableAmountAsync(string username);
         Task<ApiResponse> ProcessOnlinePaymentAsync(string username, float amount);
         Task<List<User>> GetFacultyStudentsAsync(string faculty);
+        Task<ApiResponse> AddFacultyAsync(string facultyName);
+        Task<string> GetUsernameAsync(string uid);
+        Task<User> GetUserDetailsAsync(string username);
     }
 }
