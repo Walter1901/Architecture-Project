@@ -1,6 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using WebAPI_PrintSystem.Services;
 using PrintSystem.DAL;
+using WebAPI_PrintSystem.Services;
+using MVC_PrintSystem.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -19,6 +22,12 @@ builder.Services.AddDbContext<PrintSystemContext>(options =>
 // HTTP Client for SAP HR
 builder.Services.AddHttpClient<ISAPHRService, SAPHRService>();
 builder.Services.AddScoped<ISAPHRService, SAPHRService>();
+
+builder.Services.AddHttpClient<IWebAPIService, WebAPIService>(client =>
+{
+    var baseUrl = builder.Configuration["WebAPI:BaseUrl"] ?? "https://localhost:7000/";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 // CORS policy
 builder.Services.AddCors(options =>

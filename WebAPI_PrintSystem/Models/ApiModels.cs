@@ -1,5 +1,6 @@
 ﻿namespace WebAPI_PrintSystem.Models
 {
+
     public class AddAmountRequest
     {
         public string Username { get; set; } = string.Empty;
@@ -10,6 +11,7 @@
     {
         public string Username { get; set; } = string.Empty;
         public float Amount { get; set; }
+        public string PaymentMethod { get; set; } = "CreditCard";
     }
 
     public class PrintCheckRequest
@@ -26,7 +28,7 @@
         public float Amount { get; set; }
     }
 
-    public class SAPUserData
+    public class SAPUserRequest
     {
         public string Username { get; set; } = string.Empty;
         public string UID { get; set; } = string.Empty;

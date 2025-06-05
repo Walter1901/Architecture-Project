@@ -1,0 +1,175 @@
+﻿@{
+    ViewData["Title"] = "Allocate Quota";
+    var maxAllocation = ViewBag.MaxAllocation ?? 50;
+}
+
+<!-- Faculty Quota Allocation Page -->
+<!-- Allows faculty members to allocate printing quota to individual students -->
+<!-- Features: Input validation, amount suggestions, page calculation, allocation tracking -->
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <!-- Page Header -->
+                <div class="card-header bg-success text-white">
+                    <h4><i class="fas fa-plus-circle"></i> Allocate Printing Quota</h4>
+                    <small>Faculty: @ViewBag.Faculty</small>
+                </div>
+                <div class="card-body">
+
+                    <!-- Error Messages Display -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div><i class="fas fa-exclamation-triangle"></i> @error.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+
+                    <!-- Allocation Form -->
+                    <form asp-action="AllocateQuota" method="post">
+                        <div class="row">
+                            <!-- Student Username Input -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="username" class="form-label">
+                                        <i class="fas fa-user"></i> Student Username
+                                    </label>
+                                    <input type="text" class="form-control" id="username" name="username"
+                                           placeholder="e.g., joaquim.jonathan" required />
+                                    <div class="form-text">
+                                        Enter the exact username of the student
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Amount Input -->
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="amount" class="form-label">
+                                        <i class="fas fa-money-bill"></i> Amount to Allocate (CHF)
+                                    </label>
+                                    <input type="number" class="form-control" id="amount" name="amount"
+                                           min="1" max="@maxAllocation" step="0.50"
+                                           placeholder="e.g., 20.00" required />
+                                    <div class="form-text">
+                                        Maximum: @maxAllocation CHF per allocation
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Reason Text Area -->
+                        <div class="mb-3">
+                            <label for="reason" class="form-label">
+                                <i class="fas fa-comment"></i> Reason for Allocation (optional)
+                            </label>
+                            <textarea class="form-control" id="reason" name="reason" rows="3"
+                                      placeholder="e.g., Monthly allocation, Special project, Make-up quota..."></textarea>
+                        </div>
+
+                        <!-- Dynamic Page Calculation Display -->
+                        <div class="mb-3">
+                            <div class="alert alert-info">
+                                <h6><i class="fas fa-info-circle"></i> Page Equivalence</h6>
+                                <div id="pageEquivalent">
+                                    <span id="pageCount">0</span> A4 black & white pages (0.08 CHF/page)
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Quick Amount Selection Buttons -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-outline-success w-100" onclick="setAmount(10)">
+                                    10 CHF (125 pages)
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-outline-success w-100" onclick="setAmount(20)">
+                                    20 CHF (250 pages)
+                                </button>
+                            </div>
+                            <div class="col-md-4">
+                                <button type="button" class="btn btn-outline-success w-100" onclick="setAmount(30)">
+                                    30 CHF (375 pages)
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Submit and Cancel Buttons -->
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="fas fa-check"></i> Allocate Quota
+                            </button>
+                            <a href="@Url.Action("Dashboard")" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Allocation Guidelines Panel -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-question-circle"></i> Allocation Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Best Practices Column -->
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-thumbs-up"></i> Best Practices</h6>
+                            <ul class="list-unstyled">
+                                <li><i class="fas fa-check text-success"></i> Verify username before submitting</li>
+                                <li><i class="fas fa-check text-success"></i> Document the reason for allocation</li>
+                                <li><i class="fas fa-check text-success"></i> Regular allocation: 15-25 CHF recommended</li>
+                                <li><i class="fas fa-check text-success"></i> Monitor students with low quota</li>
+                            </ul>
+                        </div>
+
+                        <!-- Usage Estimation Column -->
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-calculator"></i> Usage Estimation</h6>
+                            <small>
+                                • <strong>Light user:</strong> 10-15 CHF/month<br>
+                                • <strong>Average user:</strong> 20-25 CHF/month<br>
+                                • <strong>Heavy user:</strong> 30-40 CHF/month<br>
+                                • <strong>Special projects:</strong> 50 CHF one-time
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Dynamic Features -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const amountInput = document.getElementById('amount');
+        const pageCount = document.getElementById('pageCount');
+
+        // Updates the page count display based on entered amount
+        // Calculates equivalent pages for visual reference
+        function updatePageCount() {
+            const amount = parseFloat(amountInput.value) || 0;
+            const pages = Math.floor(amount / 0.08); // 0.08 CHF per A4 B&W page
+            pageCount.textContent = pages;
+        }
+
+        // Update page count when user changes amount
+        amountInput.addEventListener('input', updatePageCount);
+        updatePageCount(); // Initial calculation
+    });
+
+    // Sets a preset amount in the input field
+    function setAmount(amount) {
+        document.getElementById('amount').value = amount;
+        const event = new Event('input', { bubbles: true });
+        document.getElementById('amount').dispatchEvent(event);
+    }
+</script>

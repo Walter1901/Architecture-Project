@@ -1,7 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using WebAPI_PrintSystem.Services;
 using WebAPI_PrintSystem.Models;
-using PrintSystem.Models;
 
 namespace WebAPI_PrintSystem.Controllers
 {
@@ -23,21 +22,33 @@ namespace WebAPI_PrintSystem.Controllers
             {
                 if (string.IsNullOrEmpty(request.Username) || request.Quotas <= 0)
                 {
-                    return BadRequest(new ApiResponse { Success = false, ErrorMessage = "Invalid request data" });
+                    return BadRequest(new PrintSystem.Models.ApiResponse
+                    {
+                        Success = false,
+                        ErrorMessage = "Invalid request data"
+                    });
                 }
 
                 var result = await _sqlService.AddAmountAsync(request.Username, request.Quotas);
 
                 if (result)
                 {
-                    return Ok(new ApiResponse { Success = true });
+                    return Ok(new PrintSystem.Models.ApiResponse { Success = true });
                 }
 
-                return BadRequest(new ApiResponse { Success = false, ErrorMessage = "Failed to add quota" });
+                return BadRequest(new PrintSystem.Models.ApiResponse
+                {
+                    Success = false,
+                    ErrorMessage = "Failed to add quota"
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new ApiResponse { Success = false, ErrorMessage = ex.Message });
+                return StatusCode(500, new PrintSystem.Models.ApiResponse
+                {
+                    Success = false,
+                    ErrorMessage = ex.Message
+                });
             }
         }
 

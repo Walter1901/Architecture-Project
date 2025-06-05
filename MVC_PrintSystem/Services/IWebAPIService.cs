@@ -11,5 +11,11 @@ namespace MVC_PrintSystem.Services
         Task<ApiResponse> AddFacultyAsync(string facultyName);
         Task<string> GetUsernameAsync(string uid);
         Task<User> GetUserDetailsAsync(string username);
+
+        
+        Task<List<FacultyStudent>> GetFacultyStudentsDetailedAsync(string faculty);
+        Task<ApiResponse> AllocateFacultyQuotaAsync(string username, float amount, string allocatedBy, string reason);
+        Task<List<PaymentTransaction>> GetPaymentHistoryAsync(string username);
+        Task<object> GetFacultyQuotaSummaryAsync(string faculty);
     }
 }
