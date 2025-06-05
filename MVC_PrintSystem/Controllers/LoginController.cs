@@ -5,13 +5,9 @@ using MVC_PrintSystem.Services;
 namespace MVC_PrintSystem.Controllers
 {
     public class LoginController : Controller
-    {
-        private readonly ILoginService _loginService;
 
-        public LoginController(ILoginService loginService)
-        {
-            _loginService = loginService;
-        }
+    {
+
 
         [HttpGet]
         public IActionResult Index()
@@ -20,27 +16,32 @@ namespace MVC_PrintSystem.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Index(LoginViewModel model)
+        public IActionResult Index(LoginViewModel model)
         {
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
 
-            var result = await _loginService.Login(model.CardId);
-
-            if (result is RedirectToActionResult redirectResult)
+            // Test simple pour vérifier que ça marche
+            if (model.CardId == 123)
             {
-                return redirectResult;
+                // Stocker en session
+                HttpContext.Session.SetString("Username", "test.user");
+                HttpContext.Session.SetString("Role", "Student");
+                HttpContext.Session.SetString("IsLoggedIn", "true");
+
+                return RedirectToAction("Dashboard", "Students");
             }
 
-            ModelState.AddModelError("", "Invalid login attempt.");
+            ModelState.AddModelError("", "Card ID invalide. Essayez 123 pour tester.");
             return View(model);
         }
 
         public IActionResult Logout()
         {
-            return _loginService.Logout();
+            HttpContext.Session.Clear();
+            return RedirectToAction("Index");
         }
     }
 }

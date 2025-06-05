@@ -4,7 +4,7 @@ using MVC_PrintSystem.Services;
 
 namespace MVC_PrintSystem.Controllers
 {
-    public class StudentsController : Controller
+    public class StudentsController : BaseController
     {
         private readonly IWebAPIService _webAPIService;
 
@@ -15,12 +15,16 @@ namespace MVC_PrintSystem.Controllers
 
         public async Task<IActionResult> Dashboard()
         {
+            
+            if (!CheckRole("Student"))
+                return RedirectToLogin("Access denied - Student access required");
+
             try
             {
-                var username = User.Identity?.Name;
-                var availableAmount = await _webAPIService.GetAvailableAmountAsync(username);
-                ViewBag.Username = username;
+                var availableAmount = await _webAPIService.GetAvailableAmountAsync(CurrentUsername);
+                ViewBag.Username = CurrentUsername;
                 ViewBag.AvailableAmount = availableAmount;
+
                 return View();
             }
             catch (Exception ex)
@@ -32,12 +36,19 @@ namespace MVC_PrintSystem.Controllers
 
         public IActionResult PayOnline()
         {
+            
+            if (!CheckRole("Student"))
+                return RedirectToLogin("Access denied - Student access required");
+
             return View();
         }
 
         [HttpPost]
         public async Task<IActionResult> PayOnline(TopUpViewModel model)
         {
+            if (!CheckRole("Student"))
+                return RedirectToLogin("Access denied - Student access required");
+
             if (!ModelState.IsValid)
             {
                 return View(model);
@@ -45,8 +56,7 @@ namespace MVC_PrintSystem.Controllers
 
             try
             {
-                var username = User.Identity?.Name;
-                var result = await _webAPIService.ProcessOnlinePaymentAsync(username, model.Amount);
+                var result = await _webAPIService.ProcessOnlinePaymentAsync(CurrentUsername, model.Amount);
 
                 if (result.Success)
                 {
