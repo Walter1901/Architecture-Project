@@ -19,9 +19,7 @@ builder.Services.AddScoped<ISAPHRService, SAPHRService>();
 
 // Database Context - MYSQL au lieu de SQL Server
 builder.Services.AddDbContext<PrintSystemContext>(options =>
-    options.UseMySql(
-        builder.Configuration.GetConnectionString("DefaultConnection"),
-        new MySqlServerVersion(new Version(8, 0, 0))));
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // CORS
 builder.Services.AddCors(options =>
