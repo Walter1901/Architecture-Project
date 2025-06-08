@@ -14,7 +14,7 @@ namespace MVC_PrintSystem.Services
         {
             _configuration = configuration;
             _logger = logger;
-            _baseUrl = "https://localhost:7048/"; // URL fixe pour éviter tout problème de config
+            _baseUrl = "https://webapiprintsystem1-b4ekbwacckhja8cy.switzerlandnorth-01.azurewebsites.net/"; 
 
             _logger.LogInformation($"WebAPIService initialized with BaseUrl: {_baseUrl}");
         }
