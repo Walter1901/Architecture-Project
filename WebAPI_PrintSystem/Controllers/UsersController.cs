@@ -9,10 +9,12 @@ namespace WebAPI_PrintSystem.Controllers
     public class UsersController : ControllerBase
     {
         private readonly ISAPHRService _sapHRService;
+        private readonly ISqlService _sqlService; // AJOUT : Service pour les quotas réels
 
-        public UsersController(ISAPHRService sapHRService)
+        public UsersController(ISAPHRService sapHRService, ISqlService sqlService)
         {
             _sapHRService = sapHRService;
+            _sqlService = sqlService;
         }
 
         [HttpGet("username/{uid}")]
@@ -45,12 +47,23 @@ namespace WebAPI_PrintSystem.Controllers
         {
             try
             {
-                // Mock data for testing
-                var students = new List<User>
+                var students = new List<PrintSystem.Models.User>();
+
+                var studentUsernames = new[] { "joaquim.jonathan", "student2", "marie.dupont" };
+
+                foreach (var username in studentUsernames)
                 {
-                    new User { Username = "joaquim.jonathan", Faculty = faculty, AvailableQuota = 75.0f },
-                    new User { Username = "student2", Faculty = faculty, AvailableQuota = 50.0f }
-                };
+                    var realQuota = await _sqlService.GetAvailableAmountAsync(username);
+
+                    students.Add(new PrintSystem.Models.User
+                    {
+                        Username = username,
+                        Faculty = "Computer Science", 
+                        AvailableQuota = realQuota, 
+                        Role = "Student",
+                        LastUpdated = DateTime.Now
+                    });
+                }
 
                 return Ok(students);
             }
@@ -65,11 +78,15 @@ namespace WebAPI_PrintSystem.Controllers
         {
             try
             {
-                // Mock data for testing
-                var user = new User
+                
+                var realQuota = await _sqlService.GetAvailableAmountAsync(username);
+
+                var user = new PrintSystem.Models.User
                 {
                     Username = username,
-                    Role = username.Contains("faculty") ? "Faculty" : "Student" // Add role information
+                    Faculty = "Computer Science", 
+                    AvailableQuota = realQuota, 
+                    Role = username.Contains("faculty") ? "Faculty" : "Student"
                 };
 
                 return Ok(user);
@@ -79,5 +96,6 @@ namespace WebAPI_PrintSystem.Controllers
                 return StatusCode(500, new { Error = ex.Message });
             }
         }
+
     }
 }

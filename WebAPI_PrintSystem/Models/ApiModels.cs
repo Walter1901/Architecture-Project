@@ -1,6 +1,5 @@
 ﻿namespace WebAPI_PrintSystem.Models
 {
-
     public class AddAmountRequest
     {
         public string Username { get; set; } = string.Empty;

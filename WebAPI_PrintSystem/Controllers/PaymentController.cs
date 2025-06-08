@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using WebAPI_PrintSystem.Services;
 using WebAPI_PrintSystem.Models;
+using PrintSystem.Models;
 
 namespace WebAPI_PrintSystem.Controllers
 {
@@ -22,7 +23,7 @@ namespace WebAPI_PrintSystem.Controllers
         {
             try
             {
-                if (string.IsNullOrEmpty(request.Username) || request.Amount <= 0)
+                if (request == null || string.IsNullOrEmpty(request.Username) || request.Amount <= 0)
                 {
                     return BadRequest(new PrintSystem.Models.ApiResponse
                     {

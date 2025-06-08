@@ -16,16 +16,11 @@ builder.Services.AddSession(options =>
     options.Cookie.SameSite = SameSiteMode.Strict; // CSRF protection
 });
 
-builder.Services.AddHttpClient<IWebAPIService, WebAPIService>(client =>
-{
-    var baseUrl = builder.Configuration["WebAPI:BaseUrl"] ?? "https://localhost:7048/";
-    client.BaseAddress = new Uri(baseUrl);
-});
 
 builder.Services.AddScoped<IWebAPIService, WebAPIService>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<IStudentHomeServices, StudentHomeService>();
-builder.Services.AddScoped<IStudentPrintPaymentServices, StudentPrintPaymentService>();
+builder.Services.AddHttpClient<IStudentPrintPaymentServices, StudentPrintPaymentService>();
 builder.Services.AddScoped<IFacultyHomeServices, FacultyHomeService>();
 builder.Services.AddScoped<IFacultyStudentPrintPaymentServices, FacultyStudentPrintPaymentService>();
 builder.Services.AddScoped<IStudentsListServices, StudentsListService>();

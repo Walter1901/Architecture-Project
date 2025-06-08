@@ -1,9 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebAPI_PrintSystem.Services;
 using PrintSystem.DAL;
-using WebAPI_PrintSystem.Services;
-using MVC_PrintSystem.Services;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -11,30 +8,27 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Custom Services
+// Configuration HttpClient
+builder.Services.AddHttpClient();
+
+// Services
 builder.Services.AddScoped<ISqlService, SqlService>();
 builder.Services.AddScoped<IPaymentDBService, PaymentDBService>();
 builder.Services.AddScoped<IADService, ADService>();
-
-builder.Services.AddDbContext<PrintSystemContext>(options =>
-    options.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=PrintSystemDB;Trusted_Connection=True;"));
-
-// HTTP Client for SAP HR
-builder.Services.AddHttpClient<ISAPHRService, SAPHRService>();
 builder.Services.AddScoped<ISAPHRService, SAPHRService>();
 
-builder.Services.AddHttpClient<IWebAPIService, WebAPIService>(client =>
-{
-    var baseUrl = builder.Configuration["WebAPI:BaseUrl"] ?? "https://localhost:7000/";
-    client.BaseAddress = new Uri(baseUrl);
-});
+// Database Context - MYSQL au lieu de SQL Server
+builder.Services.AddDbContext<PrintSystemContext>(options =>
+    options.UseMySql(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        new MySqlServerVersion(new Version(8, 0, 0))));
 
-// CORS policy
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowMVC", policy =>
     {
-        policy.WithOrigins("https://localhost:7001", "http://localhost:5001")
+        policy.WithOrigins("https://localhost:7226", "http://localhost:5102")
                .AllowAnyMethod()
                .AllowAnyHeader();
     });
@@ -42,10 +36,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// Database initialization
 using (var scope = app.Services.CreateScope())
 {
     var dbContext = scope.ServiceProvider.GetRequiredService<PrintSystemContext>();
-    dbContext.Database.EnsureCreated(); // Ensure the database is created and migrated
+    dbContext.Database.EnsureCreated();
 }
 
 if (app.Environment.IsDevelopment())
