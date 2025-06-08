@@ -16,11 +16,7 @@ builder.Services.AddSession(options =>
     options.Cookie.SameSite = SameSiteMode.Strict; // CSRF protection
 });
 
-builder.Services.AddHttpClient<IWebAPIService, WebAPIService>(client =>
-{
-    var baseUrl = builder.Configuration["WebAPI:BaseUrl"] ?? "https://localhost:7048/";
-    client.BaseAddress = new Uri(baseUrl);
-});
+
 
 builder.Services.AddScoped<IWebAPIService, WebAPIService>();
 builder.Services.AddScoped<ILoginService, LoginService>();

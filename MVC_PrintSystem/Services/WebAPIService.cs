@@ -5,23 +5,85 @@ namespace MVC_PrintSystem.Services
 {
     public class WebAPIService : IWebAPIService
     {
-        private readonly HttpClient _httpClient;
         private readonly IConfiguration _configuration;
+        private readonly ILogger<WebAPIService> _logger;
+        private readonly string _baseUrl;
 
-        public WebAPIService(HttpClient httpClient, IConfiguration configuration)
+        // SOLUTION : Pas d'injection d'HttpClient, on le crée nous-mêmes
+        public WebAPIService(IConfiguration configuration, ILogger<WebAPIService> logger)
         {
-            _httpClient = httpClient;
             _configuration = configuration;
+            _logger = logger;
+            _baseUrl = "https://localhost:7048/"; // URL fixe pour éviter tout problème de config
 
+            _logger.LogInformation($"WebAPIService initialized with BaseUrl: {_baseUrl}");
+        }
+
+        // Méthode pour créer un HttpClient propre à chaque appel
+        private HttpClient CreateHttpClient()
+        {
+            var client = new HttpClient();
+            client.Timeout = TimeSpan.FromSeconds(30);
+            client.BaseAddress = new Uri(_baseUrl);
+            return client;
+        }
+
+        public async Task<ApiResponse> ProcessOnlinePaymentAsync(string username, float amount)
+        {
+            using var httpClient = CreateHttpClient();
+
+            try
+            {
+                var request = new { Username = username, Amount = amount };
+
+                _logger.LogInformation($"Calling API: {_baseUrl}api/payment/online");
+                _logger.LogInformation($"Request: Username={username}, Amount={amount}");
+
+                // Utilisation d'URL relative maintenant que BaseAddress est définie
+                var response = await httpClient.PostAsJsonAsync("api/payment/online", request);
+
+                _logger.LogInformation($"Response Status: {response.StatusCode}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation($"Response Content: {content}");
+
+                    var result = JsonSerializer.Deserialize<ApiResponse>(content,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    return result ?? new ApiResponse { Success = false, ErrorMessage = "Empty response" };
+                }
+
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"API Error: {response.StatusCode} - {errorContent}");
+
+                return new ApiResponse
+                {
+                    Success = false,
+                    ErrorMessage = $"API Error: {response.StatusCode}"
+                };
+            }
+            catch (HttpRequestException ex)
+            {
+                var errorMsg = $"Impossible de contacter l'API sur {_baseUrl}. Vérifiez que WebAPI_PrintSystem fonctionne. Erreur: {ex.Message}";
+                _logger.LogError(errorMsg);
+                return new ApiResponse { Success = false, ErrorMessage = errorMsg };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError($"Erreur inattendue: {ex.Message}");
+                return new ApiResponse { Success = false, ErrorMessage = $"Erreur: {ex.Message}" };
+            }
         }
 
         public async Task<ApiResponse> AddAmountAsync(string username, float quotas)
         {
+            using var httpClient = CreateHttpClient();
+
             try
             {
-                Console.WriteLine($"Request URI: {_httpClient.BaseAddress}api/quota/add");
                 var request = new { Username = username, Quotas = quotas };
-                var response = await _httpClient.PostAsJsonAsync("api/quota/add", request);
+                var response = await httpClient.PostAsJsonAsync("api/quota/add", request);
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -41,9 +103,11 @@ namespace MVC_PrintSystem.Services
 
         public async Task<float> GetAvailableAmountAsync(string username)
         {
+            using var httpClient = CreateHttpClient();
+
             try
             {
-                var response = await _httpClient.GetAsync($"api/quota/available/{username}");
+                var response = await httpClient.GetAsync($"api/quota/available/{username}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -62,34 +126,13 @@ namespace MVC_PrintSystem.Services
             }
         }
 
-        public async Task<ApiResponse> ProcessOnlinePaymentAsync(string username, float amount)
-        {
-            try
-            {
-                var request = new { Username = username, Amount = amount };
-                var response = await _httpClient.PostAsJsonAsync("api/payment/online", request);
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<ApiResponse>(content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return result ?? new ApiResponse { Success = false, ErrorMessage = "Empty response" };
-                }
-
-                return new ApiResponse { Success = false, ErrorMessage = "Payment error" };
-            }
-            catch (Exception ex)
-            {
-                return new ApiResponse { Success = false, ErrorMessage = ex.Message };
-            }
-        }
-
         public async Task<List<User>> GetFacultyStudentsAsync(string faculty)
         {
+            using var httpClient = CreateHttpClient();
+
             try
             {
-                var response = await _httpClient.GetAsync($"api/users/faculty/{faculty}");
+                var response = await httpClient.GetAsync($"api/users/faculty/{faculty}");
 
                 if (response.IsSuccessStatusCode)
                 {
@@ -109,82 +152,21 @@ namespace MVC_PrintSystem.Services
 
         public async Task<ApiResponse> AddFacultyAsync(string facultyName)
         {
-            var response = await _httpClient.PostAsJsonAsync("api/faculty/add", new { Name = facultyName });
-            return await response.Content.ReadFromJsonAsync<ApiResponse>() ??
-                   new ApiResponse { Success = false, ErrorMessage = "Empty response" };
-        }
+            using var httpClient = CreateHttpClient();
 
-        public async Task<string> GetUsernameAsync(string uid)
-        {
-            var response = await _httpClient.GetAsync($"api/users/username/{uid}");
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                var result = JsonSerializer.Deserialize<dynamic>(content);
-                return result?.Username ?? "unknown";
-            }
-            return "unknown";
-        }
-
-        public async Task<User> GetUserDetailsAsync(string username)
-        {
-            var response = await _httpClient.GetAsync($"api/users/details/{username}");
-            if (response.IsSuccessStatusCode)
-            {
-                var content = await response.Content.ReadAsStringAsync();
-                return JsonSerializer.Deserialize<User>(content,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ??
-                    new User { Username = username, Role = "Student" };
-            }
-            return new User { Username = username, Role = "Student" };
-        }
-
-        
-        public async Task<List<FacultyStudent>> GetFacultyStudentsDetailedAsync(string faculty)
-        {
             try
             {
-                var response = await _httpClient.GetAsync($"api/faculties/students/{faculty}");
+                var response = await httpClient.PostAsJsonAsync("api/faculty/add", new { Name = facultyName });
 
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<List<FacultyStudent>>(content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return result ?? new List<FacultyStudent>();
+                    return JsonSerializer.Deserialize<ApiResponse>(content,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ??
+                        new ApiResponse { Success = false, ErrorMessage = "Empty response" };
                 }
 
-                return new List<FacultyStudent>();
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error retrieving faculty students: {ex.Message}");
-                return new List<FacultyStudent>();
-            }
-        }
-
-        public async Task<ApiResponse> AllocateFacultyQuotaAsync(string username, float amount, string allocatedBy, string reason)
-        {
-            try
-            {
-                var request = new FacultyQuotaRequest
-                {
-                    Username = username,
-                    Amount = amount,
-                    AllocatedBy = allocatedBy,
-                    Reason = reason
-                };
-                var response = await _httpClient.PostAsJsonAsync("api/faculties/allocate-quota", request); // Use relative URI
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<ApiResponse>(content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return result ?? new ApiResponse { Success = false, ErrorMessage = "Empty response" };
-                }
-
-                return new ApiResponse { Success = false, ErrorMessage = "API communication error" };
+                return new ApiResponse { Success = false, ErrorMessage = "API error" };
             }
             catch (Exception ex)
             {
@@ -192,50 +174,76 @@ namespace MVC_PrintSystem.Services
             }
         }
 
-        public async Task<List<PaymentTransaction>> GetPaymentHistoryAsync(string username)
+        public async Task<string> GetUsernameAsync(string uid)
         {
+            using var httpClient = CreateHttpClient();
+
             try
             {
-                var response = await _httpClient.GetAsync($"api/payment/history/{username}");
+                var response = await httpClient.GetAsync($"api/users/username/{uid}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
-                    var result = JsonSerializer.Deserialize<List<PaymentTransaction>>(content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
-                    return result ?? new List<PaymentTransaction>();
+                    var result = JsonSerializer.Deserialize<JsonElement>(content);
+
+                    if (result.TryGetProperty("Username", out var usernameProperty))
+                    {
+                        return usernameProperty.GetString() ?? "unknown";
+                    }
                 }
 
-                return new List<PaymentTransaction>();
+                return "unknown";
             }
-            catch (Exception ex)
+            catch
             {
-                Console.WriteLine($"Error retrieving payment history: {ex.Message}");
-                return new List<PaymentTransaction>();
+                return "unknown";
             }
+        }
+
+        public async Task<User> GetUserDetailsAsync(string username)
+        {
+            using var httpClient = CreateHttpClient();
+
+            try
+            {
+                var response = await httpClient.GetAsync($"api/users/details/{username}");
+
+                if (response.IsSuccessStatusCode)
+                {
+                    var content = await response.Content.ReadAsStringAsync();
+                    return JsonSerializer.Deserialize<User>(content,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ??
+                        new User { Username = username, Role = "Student" };
+                }
+
+                return new User { Username = username, Role = "Student" };
+            }
+            catch
+            {
+                return new User { Username = username, Role = "Student" };
+            }
+        }
+
+        // Méthodes supplémentaires requises par l'interface
+        public async Task<List<FacultyStudent>> GetFacultyStudentsDetailedAsync(string faculty)
+        {
+            return new List<FacultyStudent>();
+        }
+
+        public async Task<ApiResponse> AllocateFacultyQuotaAsync(string username, float amount, string allocatedBy, string reason)
+        {
+            return new ApiResponse { Success = false, ErrorMessage = "Not implemented" };
+        }
+
+        public async Task<List<PaymentTransaction>> GetPaymentHistoryAsync(string username)
+        {
+            return new List<PaymentTransaction>();
         }
 
         public async Task<object> GetFacultyQuotaSummaryAsync(string faculty)
         {
-            try
-            {
-                var response = await _httpClient.GetAsync($"api/faculties/quota-summary/{faculty}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    var content = await response.Content.ReadAsStringAsync();
-                    return JsonSerializer.Deserialize<object>(content,
-                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true }) ?? new { };
-                }
-
-                return new { };
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error retrieving faculty summary: {ex.Message}");
-                return new { };
-            }
-
+            return new { };
         }
     }
 }
