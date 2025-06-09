@@ -11,6 +11,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrintSystem.Models", "Print
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrintSystem.DAL", "PrintSystem.DAL\PrintSystem.DAL.csproj", "{92B7DB1A-BC0B-4257-851A-07167D6B766B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PrintSystem.BLL", "PrintSystem.BLL\PrintSystem.BLL.csproj", "{2DA3E2B6-93B3-4C62-8359-204988C089C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,10 @@ Global
 		{92B7DB1A-BC0B-4257-851A-07167D6B766B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{92B7DB1A-BC0B-4257-851A-07167D6B766B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{92B7DB1A-BC0B-4257-851A-07167D6B766B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2DA3E2B6-93B3-4C62-8359-204988C089C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2DA3E2B6-93B3-4C62-8359-204988C089C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2DA3E2B6-93B3-4C62-8359-204988C089C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2DA3E2B6-93B3-4C62-8359-204988C089C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

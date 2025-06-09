@@ -64,7 +64,7 @@ using (var scope = app.Services.CreateScope())
 
         logger.LogInformation("Initializing database...");
 
-        // Créer la base de données si elle n'existe pas
+        // CrÃ©er la base de donnÃ©es si elle n'existe pas
         await context.Database.EnsureCreatedAsync();
 
         logger.LogInformation("Database initialized successfully");
@@ -73,7 +73,7 @@ using (var scope = app.Services.CreateScope())
     catch (Exception ex)
     {
         logger.LogError(ex, "An error occurred while initializing the database");
-        throw; // Re-throw pour arrêter l'application si la DB ne fonctionne pas
+        throw; // Re-throw pour arrÃªter l'application si la DB ne fonctionne pas
     }
 }
 
