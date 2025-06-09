@@ -9,17 +9,23 @@ namespace MVC_PrintSystem.Services
         private readonly ILogger<WebAPIService> _logger;
         private readonly string _baseUrl;
 
-        // SOLUTION : Pas d'injection d'HttpClient, on le crée nous-mêmes
         public WebAPIService(IConfiguration configuration, ILogger<WebAPIService> logger)
         {
             _configuration = configuration;
             _logger = logger;
-            _baseUrl = "https://webapiprintsystem1-b4ekbwacckhja8cy.switzerlandnorth-01.azurewebsites.net/"; 
+
+            if (Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development")
+            {
+                _baseUrl = "https://localhost:7048/"; 
+            }
+            else
+            {
+                _baseUrl = "https://webapiprintsystem1-b4ekbwacckhja8cy.switzerlandnorth-01.azurewebsites.net/";
+            }
 
             _logger.LogInformation($"WebAPIService initialized with BaseUrl: {_baseUrl}");
         }
 
-        // Méthode pour créer un HttpClient propre à chaque appel
         private HttpClient CreateHttpClient()
         {
             var client = new HttpClient();
@@ -39,7 +45,6 @@ namespace MVC_PrintSystem.Services
                 _logger.LogInformation($"Calling API: {_baseUrl}api/payment/online");
                 _logger.LogInformation($"Request: Username={username}, Amount={amount}");
 
-                // Utilisation d'URL relative maintenant que BaseAddress est définie
                 var response = await httpClient.PostAsJsonAsync("api/payment/online", request);
 
                 _logger.LogInformation($"Response Status: {response.StatusCode}");
@@ -57,15 +62,34 @@ namespace MVC_PrintSystem.Services
                 var errorContent = await response.Content.ReadAsStringAsync();
                 _logger.LogError($"API Error: {response.StatusCode} - {errorContent}");
 
+                try
+                {
+                    var errorResponse = JsonSerializer.Deserialize<ApiResponse>(errorContent,
+                        new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+                    if (errorResponse != null)
+                    {
+                        return errorResponse;
+                    }
+                }
+                catch
+                {
+                }
+
                 return new ApiResponse
                 {
                     Success = false,
-                    ErrorMessage = $"API Error: {response.StatusCode}"
+                    ErrorMessage = $"API Error: {response.StatusCode} - {errorContent}"
                 };
             }
             catch (HttpRequestException ex)
             {
                 var errorMsg = $"Impossible de contacter l'API sur {_baseUrl}. Vérifiez que WebAPI_PrintSystem fonctionne. Erreur: {ex.Message}";
+                _logger.LogError(errorMsg);
+                return new ApiResponse { Success = false, ErrorMessage = errorMsg };
+            }
+            catch (TaskCanceledException ex) when (ex.InnerException is TimeoutException)
+            {
+                var errorMsg = "Timeout lors de l'appel API (30 secondes)";
                 _logger.LogError(errorMsg);
                 return new ApiResponse { Success = false, ErrorMessage = errorMsg };
             }
@@ -93,10 +117,14 @@ namespace MVC_PrintSystem.Services
                     return result ?? new ApiResponse { Success = false, ErrorMessage = "Empty response" };
                 }
 
-                return new ApiResponse { Success = false, ErrorMessage = "API communication error" };
+                var errorContent = await response.Content.ReadAsStringAsync();
+                _logger.LogError($"AddAmount API Error: {response.StatusCode} - {errorContent}");
+
+                return new ApiResponse { Success = false, ErrorMessage = $"API Error: {response.StatusCode}" };
             }
             catch (Exception ex)
             {
+                _logger.LogError($"Error in AddAmountAsync: {ex.Message}");
                 return new ApiResponse { Success = false, ErrorMessage = ex.Message };
             }
         }
@@ -107,21 +135,26 @@ namespace MVC_PrintSystem.Services
 
             try
             {
+                _logger.LogInformation($"Getting available amount for: {username}");
                 var response = await httpClient.GetAsync($"api/quota/available/{username}");
 
                 if (response.IsSuccessStatusCode)
                 {
                     var content = await response.Content.ReadAsStringAsync();
+                    _logger.LogInformation($"Available amount response: {content}");
+
                     if (float.TryParse(content, out float result))
                     {
                         return result;
                     }
                 }
 
+                _logger.LogWarning($"Failed to get available amount for {username}");
                 return 0;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError($"Error getting available amount for {username}: {ex.Message}");
                 return 0;
             }
         }
@@ -144,8 +177,9 @@ namespace MVC_PrintSystem.Services
 
                 return new List<User>();
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError($"Error getting faculty students: {ex.Message}");
                 return new List<User>();
             }
         }
@@ -225,7 +259,6 @@ namespace MVC_PrintSystem.Services
             }
         }
 
-        // Méthodes supplémentaires requises par l'interface
         public async Task<List<FacultyStudent>> GetFacultyStudentsDetailedAsync(string faculty)
         {
             return new List<FacultyStudent>();
