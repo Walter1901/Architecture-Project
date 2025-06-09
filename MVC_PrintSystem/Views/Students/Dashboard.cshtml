@@ -1,0 +1,27 @@
+﻿@{
+    ViewData["Title"] = "Student Dashboard";
+    var amount = ViewBag.AvailableAmount as float? ?? 0;
+    var pages = (int)(amount / 0.08);
+}
+
+<h2>@ViewData["Title"]</h2>
+
+@if (ViewBag.Error != null)
+{
+    <div class="alert alert-danger">@ViewBag.Error</div>
+}
+else
+{
+    <p><strong>Username:</strong> @ViewBag.Username</p>
+    <p><strong>Available Credit:</strong> @amount CHF</p>
+    <p><strong>Equivalent to:</strong> @pages A4 black & white pages</p>
+}
+
+<p>
+    <a class="btn btn-primary" href="@Url.Action("PayOnline", "Students")">
+        <i class="fas fa-credit-card"></i> Top Up Account
+    </a>
+    <a class="btn btn-secondary" href="@Url.Action("PaymentHistory", "Students")">
+        <i class="fas fa-history"></i> Payment History
+    </a>
+</p>

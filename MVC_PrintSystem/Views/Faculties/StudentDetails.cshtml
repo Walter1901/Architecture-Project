@@ -1,0 +1,97 @@
+﻿@{
+    ViewData["Title"] = "Student Details";
+    var student = ViewBag.StudentDetails;
+}
+
+<!-- Student Details Page for Faculty -->
+<!-- Shows detailed information about a specific student's printing account -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            @if (ViewBag.Error != null)
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i> @ViewBag.Error
+                </div>
+            }
+            else if (student != null)
+            {
+                <div class="card">
+                    <div class="card-header bg-info text-white">
+                        <h4><i class="fas fa-user"></i> Student Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5>General Information</h5>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Username:</strong></td>
+                                        <td>@student.Username</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Faculty:</strong></td>
+                                        <td>@student.Faculty</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Available Quota:</strong></td>
+                                        <td>
+                                            <span class="badge bg-primary fs-6">
+                                                @student.AvailableQuota.ToString("F2") CHF
+                                            </span>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Last Activity:</strong></td>
+                                        <td>@student.LastActivity.ToString("dd/MM/yyyy")</td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div class="col-md-6">
+                                <h5>Statistics</h5>
+                                <table class="table table-borderless">
+                                    <tr>
+                                        <td><strong>Total Allocations:</strong></td>
+                                        <td>@student.TotalAllocations</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Print Jobs:</strong></td>
+                                        <td>@student.TotalPrintJobs</td>
+                                    </tr>
+                                    <tr>
+                                        <td><strong>Status:</strong></td>
+                                        <td>
+                                            @if (student.AvailableQuota < 5)
+                                            {
+                                                <span class="badge bg-danger">Critical</span>
+                                            }
+                                            else if (student.AvailableQuota < 15)
+                                            {
+                                                <span class="badge bg-warning">Low</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-success">Normal</span>
+                                            }
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="d-flex gap-2">
+                            <a href="@Url.Action("AllocateQuota")" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Allocate Quota
+                            </a>
+                            <a href="@Url.Action("Dashboard")" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to List
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

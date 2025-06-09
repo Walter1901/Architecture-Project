@@ -1,0 +1,181 @@
+﻿@model MVC_PrintSystem.Models.ViewModels.TopUpViewModel
+
+@{
+    ViewData["Title"] = "Top Up Account";
+    var minAmount = ViewBag.MinAmount ?? 5;     // Minimum top-up amount (5 CHF)
+    var maxAmount = ViewBag.MaxAmount ?? 100;   // Maximum top-up amount (100 CHF)
+}
+
+<!-- Student Account Top-Up Page -->
+<!-- Allows students to add credit to their printing account using various payment methods -->
+<!-- Features: Amount validation, page calculation, quick amount buttons, secure payment form -->
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <!-- Page Header with User Info -->
+                <div class="card-header bg-primary text-white">
+                    <h4><i class="fas fa-credit-card"></i> Top Up My Printing Account</h4>
+                    <small>User: @ViewBag.Username</small>
+                </div>
+                <div class="card-body">
+
+                    <!-- Success Message Display -->
+                    @if (TempData["Success"] != null)
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            <i class="fas fa-check-circle"></i> @TempData["Success"]
+                            @if (TempData["TransactionId"] != null)
+                            {
+                                <br>
+                        
+                                <small><strong>Transaction ID:</strong> @TempData["TransactionId"]</small>
+                            }
+                            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                        </div>
+                    }
+
+                    <!-- Error Messages Display -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <div><i class="fas fa-exclamation-triangle"></i> @error.ErrorMessage</div>
+                            }
+                        </div>
+                    }
+
+                    <div class="row">
+                        <!-- Left Column: Payment Form -->
+                        <div class="col-md-6">
+                            <form asp-action="PayOnline" method="post" id="paymentForm">
+
+                                <!-- Amount Input Field -->
+                                <div class="mb-3">
+                                    <label asp-for="Amount" class="form-label">
+                                        <i class="fas fa-money-bill"></i> Amount to Top Up (CHF)
+                                    </label>
+                                    <input asp-for="Amount" class="form-control form-control-lg"
+                                           placeholder="e.g., 20.00"
+                                           min="@minAmount"
+                                           max="@maxAmount"
+                                           step="0.50"
+                                           id="amountInput" />
+                                    <div class="form-text">
+                                        Amount range: @minAmount CHF - @maxAmount CHF
+                                    </div>
+                                    <span asp-validation-for="Amount" class="text-danger"></span>
+                                </div>
+
+                                <!-- Dynamic Page Calculation Display -->
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-calculator"></i> Equivalent in A4 Pages
+                                    </label>
+                                    <div class="alert alert-info" id="pageEquivalent">
+                                        <span id="pageCount">0</span> A4 black & white pages (0.08 CHF/page)
+                                    </div>
+                                </div>
+
+                                <!-- Payment Method Selection -->
+                                <div class="mb-3">
+                                    <label class="form-label">
+                                        <i class="fas fa-credit-card"></i> Payment Method
+                                    </label>
+                                    <select class="form-select" name="PaymentMethod">
+                                        <option value="CreditCard" selected>Credit Card</option>
+                                        <option value="DebitCard">Debit Card</option>
+                                        <option value="BankTransfer">Bank Transfer</option>
+                                    </select>
+                                </div>
+
+                                <!-- Quick Amount Selection Buttons -->
+                                <div class="row mb-3">
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-outline-primary w-100" onclick="setAmount(10)">
+                                            10 CHF
+                                        </button>
+                                    </div>
+                                    <div class="col-6">
+                                        <button type="button" class="btn btn-outline-primary w-100" onclick="setAmount(20)">
+                                            20 CHF
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- Submit and Cancel Buttons -->
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-primary btn-lg" id="payButton">
+                                        <i class="fas fa-lock"></i> Pay Securely
+                                    </button>
+                                    <a href="@Url.Action("Dashboard", "Students")" class="btn btn-secondary">
+                                        <i class="fas fa-arrow-left"></i> Back to Dashboard
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Right Column: Information Panel -->
+                        <div class="col-md-6">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h5 class="card-title">
+                                        <i class="fas fa-info-circle"></i> Information
+                                    </h5>
+
+                                    <!-- Security and Feature Benefits -->
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-shield-alt text-success"></i> 100% secure payment</li>
+                                        <li><i class="fas fa-bolt text-warning"></i> Credit added instantly</li>
+                                        <li><i class="fas fa-print text-primary"></i> Works on all printers</li>
+                                        <li><i class="fas fa-history text-info"></i> Credit never expires</li>
+                                    </ul>
+
+                                    <hr>
+
+                                    <!-- Printing Price Information -->
+                                    <h6><i class="fas fa-calculator"></i> Printing Rates</h6>
+                                    <small>
+                                        • A4 Black & White: 0.08 CHF/page<br>
+                                        • A4 Color: 0.25 CHF/page<br>
+                                        • A3 Black & White: 0.15 CHF/page<br>
+                                        • A3 Color: 0.40 CHF/page
+                                    </small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- JavaScript for Dynamic Page Calculation -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const amountInput = document.getElementById('amountInput');
+        const pageCount = document.getElementById('pageCount');
+
+        // Updates the page count display based on entered amount
+        // Calculates how many A4 B&W pages can be printed with the entered amount
+        function updatePageCount() {
+            const amount = parseFloat(amountInput.value) || 0;
+            const pages = Math.floor(amount / 0.08); // 0.08 CHF per page
+            pageCount.textContent = pages;
+        }
+
+        // Update page count when user types in amount field
+        amountInput.addEventListener('input', updatePageCount);
+        updatePageCount(); // Initial calculation
+    });
+
+    // Sets a preset amount in the input field
+    // Used by quick amount selection buttons
+    function setAmount(amount) {
+        document.getElementById('amountInput').value = amount;
+        // Trigger input event to update page calculation
+        document.getElementById('amountInput').dispatchEvent(new Event('input'));
+    }
+</script>

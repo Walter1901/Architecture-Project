@@ -1,76 +1,88 @@
 using Microsoft.EntityFrameworkCore;
 using WebAPI_PrintSystem.Services;
 using PrintSystem.DAL;
-using PrintSystem.BLL.Interfaces;
-using PrintSystem.BLL.Services;
-using PrintSystem.DAL.Interfaces;
-using PrintSystem.DAL.Repositories;
-using PrintSystem.Models.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Legacy Services - kept for backward compatibility
+// Add logging
+builder.Services.AddLogging(logging =>
+{
+    logging.AddConsole();
+    logging.AddDebug();
+});
+
+// Configuration HttpClient
+builder.Services.AddHttpClient();
+
+// Services - IMPORTANT: Utilisent maintenant Entity Framework
 builder.Services.AddScoped<ISqlService, SqlService>();
 builder.Services.AddScoped<IPaymentDBService, PaymentDBService>();
+builder.Services.AddScoped<IADService, ADService>();
+builder.Services.AddScoped<ISAPHRService, SAPHRService>();
 
-// Business Logic Layer Services
-builder.Services.AddScoped<IQuotaService, QuotaService>();
-builder.Services.AddScoped<IPaymentService, PaymentService>();
-builder.Services.AddScoped<IUserService, UserService>();
-
-// Data Access Layer Repositories
-builder.Services.AddScoped<IQuotaRepository>(provider =>
-    new QuotaRepository(provider.GetService<IConfiguration>()
-        .GetConnectionString("DefaultConnection")));
-
-builder.Services.AddScoped<IPaymentRepository>(provider =>
-    new PaymentRepository(provider.GetService<IConfiguration>()
-        .GetConnectionString("DefaultConnection")));
-
-// External Services
-builder.Services.AddScoped<PrintSystem.Models.Interfaces.IADService, ADService>();
-builder.Services.AddScoped<PrintSystem.Models.Interfaces.ISAPHRService, SAPHRService>();
-
-// Database Context
+// Database Context - Entity Framework avec SQL Server
 builder.Services.AddDbContext<PrintSystemContext>(options =>
-    options.UseSqlServer(@"Server=(localdb)\mssqllocaldb;Database=PrintSystemDB;Trusted_Connection=True;"));
+{
+    var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    options.UseSqlServer(connectionString);
 
-// HTTP Client for SAP HR Service
-builder.Services.AddHttpClient<PrintSystem.Models.Interfaces.ISAPHRService, SAPHRService>();
+    // Enable sensitive data logging in development
+    if (builder.Environment.IsDevelopment())
+    {
+        options.EnableSensitiveDataLogging();
+        options.EnableDetailedErrors();
+    }
+});
 
-// CORS policy for MVC application
+// CORS
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowMVC", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins("https://localhost:7226", "http://localhost:5102")
+               .AllowAnyMethod()
+               .AllowAnyHeader();
     });
 });
 
-
 var app = builder.Build();
 
-// Ensure database is created
+// Database initialization - CORRIGER L'INITIALISATION
 using (var scope = app.Services.CreateScope())
 {
-    var dbContext = scope.ServiceProvider.GetRequiredService<PrintSystemContext>();
-    dbContext.Database.EnsureCreated();
+    var services = scope.ServiceProvider;
+    var logger = services.GetRequiredService<ILogger<Program>>();
+
+    try
+    {
+        var context = services.GetRequiredService<PrintSystemContext>();
+
+        logger.LogInformation("Initializing database...");
+
+        // Créer la base de données si elle n'existe pas
+        await context.Database.EnsureCreatedAsync();
+
+        logger.LogInformation("Database initialized successfully");
+
+    }
+    catch (Exception ex)
+    {
+        logger.LogError(ex, "An error occurred while initializing the database");
+        throw; // Re-throw pour arrêter l'application si la DB ne fonctionne pas
+    }
 }
 
-// Configure development environment
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-// Configure HTTP pipeline
 app.UseHttpsRedirection();
 app.UseCors("AllowMVC");
 app.UseAuthorization();

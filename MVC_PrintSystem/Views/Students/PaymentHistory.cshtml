@@ -1,0 +1,116 @@
+﻿@model List<PrintSystem.Models.PaymentTransaction>
+
+@{
+    ViewData["Title"] = "Payment History";
+}
+
+<!-- Student Payment History Page -->
+<!-- Displays all payment transactions including top-ups and print deductions -->
+<!-- Features: Transaction filtering, status indicators, detailed transaction info -->
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <!-- Page Header -->
+                <div class="card-header bg-info text-white">
+                    <h4><i class="fas fa-history"></i> Payment History</h4>
+                    <small>User: @ViewBag.Username</small>
+                </div>
+                <div class="card-body">
+
+                    <!-- Error Message Display -->
+                    @if (ViewBag.Error != null)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-exclamation-triangle"></i> @ViewBag.Error
+                        </div>
+                    }
+
+                    <!-- Transaction Table or Empty State -->
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped table-hover">
+                                <thead class="table-dark">
+                                    <tr>
+                                        <th><i class="fas fa-calendar"></i> Date</th>
+                                        <th><i class="fas fa-tag"></i> Type</th>
+                                        <th><i class="fas fa-money-bill"></i> Amount (CHF)</th>
+                                        <th><i class="fas fa-hashtag"></i> Reference</th>
+                                        <th><i class="fas fa-info"></i> Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var transaction in Model)
+                                    {
+                                        <tr>
+                                            <!-- Transaction Date -->
+                                            <td>@transaction.TransactionDate.ToString("dd/MM/yyyy HH:mm")</td>
+
+                                            <!-- Transaction Type with Color-Coded Badges -->
+                                            <td>
+                                                @if (transaction.TransactionType == "TopUp")
+                                                {
+                                                    <span class="badge bg-success">
+                                                        <i class="fas fa-plus"></i> Top Up
+                                                    </span>
+                                                }
+                                                else if (transaction.TransactionType == "Print")
+                                                {
+                                                    <span class="badge bg-warning">
+                                                        <i class="fas fa-print"></i> Print
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-secondary">@transaction.TransactionType</span>
+                                                }
+                                            </td>
+
+                                            <!-- Amount with Color Coding (positive/negative) -->
+                                            <td class="@(transaction.Amount >= 0 ? "text-success" : "text-danger")">
+                                                @(transaction.Amount >= 0 ? "+" : "")@transaction.Amount.ToString("F2") CHF
+                                            </td>
+
+                                            <!-- Transaction Reference ID -->
+                                            <td><code>@transaction.Reference</code></td>
+
+                                            <!-- Transaction Status -->
+                                            <td>
+                                                <span class="badge bg-success">
+                                                    <i class="fas fa-check"></i> Completed
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <!-- Empty State when no transactions found -->
+                        <div class="text-center py-5">
+                            <i class="fas fa-inbox fa-3x text-muted mb-3"></i>
+                            <h5 class="text-muted">No Transactions Found</h5>
+                            <p class="text-muted">Your payments and print jobs will appear here.</p>
+                            <a href="@Url.Action("PayOnline", "Students")" class="btn btn-primary">
+                                <i class="fas fa-plus"></i> Make a Top-Up
+                            </a>
+                        </div>
+                    }
+
+                    <!-- Action Buttons -->
+                    <div class="mt-3">
+                        <a href="@Url.Action("Dashboard", "Students")" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left"></i> Back to Dashboard
+                        </a>
+                        <a href="@Url.Action("PayOnline", "Students")" class="btn btn-primary">
+                            <i class="fas fa-credit-card"></i> New Top-Up
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

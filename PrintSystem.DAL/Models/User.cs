@@ -9,6 +9,6 @@ namespace PrintSystem.DAL.Models
     public abstract class User
     {
         public int UserId { get; set; }
-
+        public abstract string GetUserRole();  // Add this abstract method
     }
 }

@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Process Payment";
+}
+
+<h2>Process Payment</h2>
+
+<form asp-action="ProcessPayment" method="post">
+    <div class="form-group">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" class="form-control" required />
+    </div>
+    <div class="form-group">
+        <label for="amount">Amount</label>
+        <input type="number" id="amount" name="amount" class="form-control" required />
+    </div>
+    <button type="submit" class="btn btn-primary">Process Payment</button>
+</form>
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success">@TempData["Success"]</div>
+}

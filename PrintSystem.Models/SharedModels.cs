@@ -9,6 +9,7 @@ namespace PrintSystem.Models
         public float AvailableQuota { get; set; }
         public string Faculty { get; set; } = string.Empty;
         public DateTime LastUpdated { get; set; }
+        public string Role { get; set; } = string.Empty;
     }
 
     public class QuotaAllocation
@@ -42,5 +43,32 @@ namespace PrintSystem.Models
         public bool Success { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
         public object? Data { get; set; }
+    }
+
+    
+    public class TopUpRequest
+    {
+        public string Username { get; set; } = string.Empty;
+        public float Amount { get; set; }
+        public string PaymentMethod { get; set; } = "CreditCard";
+        public string TransactionId { get; set; } = string.Empty;
+    }
+
+    public class FacultyQuotaRequest
+    {
+        public string Username { get; set; } = string.Empty;
+        public float Amount { get; set; }
+        public string AllocatedBy { get; set; } = string.Empty;
+        public string Reason { get; set; } = string.Empty;
+    }
+
+    public class FacultyStudent
+    {
+        public string Username { get; set; } = string.Empty;
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public float AvailableQuota { get; set; }
+        public DateTime LastActivity { get; set; }
     }
 }
