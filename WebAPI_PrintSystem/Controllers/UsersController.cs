@@ -8,10 +8,10 @@ namespace WebAPI_PrintSystem.Controllers
     [Route("api/[controller]")]
     public class UsersController : ControllerBase
     {
-        private readonly ISAPHRService _sapHRService;
-        private readonly ISqlService _sqlService; // AJOUT : Service pour les quotas réels
+        private readonly PrintSystem.Models.Interfaces.ISAPHRService _sapHRService;
+        private readonly ISqlService _sqlService;
 
-        public UsersController(ISAPHRService sapHRService, ISqlService sqlService)
+        public UsersController(PrintSystem.Models.Interfaces.ISAPHRService sapHRService, ISqlService sqlService)
         {
             _sapHRService = sapHRService;
             _sqlService = sqlService;
@@ -47,7 +47,7 @@ namespace WebAPI_PrintSystem.Controllers
         {
             try
             {
-                var students = new List<PrintSystem.Models.User>();
+                var students = new List<User>();
 
                 var studentUsernames = new[] { "joaquim.jonathan", "student2", "marie.dupont" };
 
@@ -55,11 +55,11 @@ namespace WebAPI_PrintSystem.Controllers
                 {
                     var realQuota = await _sqlService.GetAvailableAmountAsync(username);
 
-                    students.Add(new PrintSystem.Models.User
+                    students.Add(new User
                     {
                         Username = username,
-                        Faculty = "Computer Science", 
-                        AvailableQuota = realQuota, 
+                        Faculty = "Computer Science",
+                        AvailableQuota = realQuota,
                         Role = "Student",
                         LastUpdated = DateTime.Now
                     });
@@ -78,14 +78,13 @@ namespace WebAPI_PrintSystem.Controllers
         {
             try
             {
-                
                 var realQuota = await _sqlService.GetAvailableAmountAsync(username);
 
-                var user = new PrintSystem.Models.User
+                var user = new User
                 {
                     Username = username,
-                    Faculty = "Computer Science", 
-                    AvailableQuota = realQuota, 
+                    Faculty = "Computer Science",
+                    AvailableQuota = realQuota,
                     Role = username.Contains("faculty") ? "Faculty" : "Student"
                 };
 
@@ -96,6 +95,5 @@ namespace WebAPI_PrintSystem.Controllers
                 return StatusCode(500, new { Error = ex.Message });
             }
         }
-
     }
 }

@@ -1,9 +1,8 @@
-﻿using System.Text.Json;
-using PrintSystem.Models.Interfaces;
+﻿using PrintSystem.Models.Interfaces;
 
 namespace WebAPI_PrintSystem.Services
 {
-    public class SAPHRService : ISAPHRService
+    public class SAPHRService : PrintSystem.Models.Interfaces.ISAPHRService
     {
         private readonly HttpClient _httpClient;
 
@@ -16,14 +15,22 @@ namespace WebAPI_PrintSystem.Services
         {
             try
             {
-                // For testing purposes, return a mock username
-                await Task.Delay(100); // Simulate network call
-                return $"user_{uid}";
+                await Task.Delay(100);
+
+                return uid switch
+                {
+                    "123" => "test.user",
+                    "456" => "test.admin",
+                    "789" => "joaquim.jonathan",
+                    "101" => "marie.dupont",
+                    "102" => "paul.martin",
+                    _ => $"user_{uid}"
+                };
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error in GetUsernameAsync: {ex.Message}");
-                return $"user_{uid}"; // Fallback
+                return $"user_{uid}";
             }
         }
     }

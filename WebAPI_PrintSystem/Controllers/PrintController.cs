@@ -9,9 +9,9 @@ namespace WebAPI_PrintSystem.Controllers
     public class PrintController : ControllerBase
     {
         private readonly ISqlService _sqlService;
-        private readonly IADService _adService;
+        private readonly PrintSystem.Models.Interfaces.IADService _adService;
 
-        public PrintController(ISqlService sqlService, IADService adService)
+        public PrintController(ISqlService sqlService, PrintSystem.Models.Interfaces.IADService adService)
         {
             _sqlService = sqlService;
             _adService = adService;

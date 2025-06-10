@@ -4,34 +4,42 @@ using PrintSystem.DAL;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
+// ===== SERVICE REGISTRATION =====
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add logging
+// Configure logging for debugging and monitoring
 builder.Services.AddLogging(logging =>
 {
     logging.AddConsole();
     logging.AddDebug();
 });
 
-// Configuration HttpClient
+// Register HttpClient for external API calls
 builder.Services.AddHttpClient();
 
-// Services - IMPORTANT: Utilisent maintenant Entity Framework
-builder.Services.AddScoped<ISqlService, SqlService>();
-builder.Services.AddScoped<IPaymentDBService, PaymentDBService>();
-builder.Services.AddScoped<IADService, ADService>();
-builder.Services.AddScoped<ISAPHRService, SAPHRService>();
+// ===== APPLICATION SERVICES =====
+// Register business logic services with scoped lifetime
 
-// Database Context - Entity Framework avec SQL Server
+// SQL Service: Handles database operations for quotas and user balances
+builder.Services.AddScoped<ISqlService, SqlService>();
+
+// Payment Service: Manages payment transactions and logging
+builder.Services.AddScoped<IPaymentDBService, PaymentDBService>();
+
+// Active Directory Service: Use full namespace to avoid ambiguity
+builder.Services.AddScoped<PrintSystem.Models.Interfaces.IADService, ADService>();
+
+// SAP HR Service: Use full namespace to avoid ambiguity
+builder.Services.AddScoped<PrintSystem.Models.Interfaces.ISAPHRService, SAPHRService>();
+
+// ===== DATABASE CONFIGURATION =====
 builder.Services.AddDbContext<PrintSystemContext>(options =>
 {
     var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
     options.UseSqlServer(connectionString);
 
-    // Enable sensitive data logging in development
     if (builder.Environment.IsDevelopment())
     {
         options.EnableSensitiveDataLogging();
@@ -39,7 +47,7 @@ builder.Services.AddDbContext<PrintSystemContext>(options =>
     }
 });
 
-// CORS
+// ===== CORS CONFIGURATION =====
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowMVC", policy =>
@@ -50,9 +58,10 @@ builder.Services.AddCors(options =>
     });
 });
 
+// ===== APPLICATION BUILD =====
 var app = builder.Build();
 
-// Database initialization - CORRIGER L'INITIALISATION
+// ===== DATABASE INITIALIZATION =====
 using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
@@ -61,22 +70,18 @@ using (var scope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<PrintSystemContext>();
-
         logger.LogInformation("Initializing database...");
-
-        // Créer la base de données si elle n'existe pas
         await context.Database.EnsureCreatedAsync();
-
         logger.LogInformation("Database initialized successfully");
-
     }
     catch (Exception ex)
     {
         logger.LogError(ex, "An error occurred while initializing the database");
-        throw; // Re-throw pour arrêter l'application si la DB ne fonctionne pas
+        throw;
     }
 }
 
+// ===== MIDDLEWARE PIPELINE CONFIGURATION =====
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -88,4 +93,5 @@ app.UseCors("AllowMVC");
 app.UseAuthorization();
 app.MapControllers();
 
+// ===== APPLICATION STARTUP =====
 app.Run();
