@@ -4,35 +4,24 @@ using PrintSystem.Models;
 
 namespace WebAPI_PrintSystem.Controllers
 {
-    // API Controller for faculty management operations
-    // Handles student list retrieval, quota allocation, and faculty statistics
     [ApiController]
     [Route("api/[controller]")]
     public class FacultiesController : ControllerBase
     {
         private readonly ISqlService _sqlService;
-        private readonly ISAPHRService _sapHRService;
+        private readonly PrintSystem.Models.Interfaces.ISAPHRService _sapHRService;
 
-        // Constructor with dependency injection
-        public FacultiesController(ISqlService sqlService, ISAPHRService sapHRService)
+        public FacultiesController(ISqlService sqlService, PrintSystem.Models.Interfaces.ISAPHRService sapHRService)
         {
             _sqlService = sqlService;
             _sapHRService = sapHRService;
         }
 
-        // Retrieves list of students belonging to a specific faculty
-        // Combines student data from HR system with current quota information
         [HttpGet("students/{faculty}")]
         public async Task<IActionResult> GetFacultyStudents(string faculty)
         {
             try
             {
-                // In production, this would:
-                // 1. Query SAP HR for students in faculty
-                // 2. Get current quota for each student from database
-                // 3. Combine data and return
-
-                // Mock data for demonstration - replace with real implementation
                 var students = new List<FacultyStudent>
                 {
                     new FacultyStudent
@@ -64,7 +53,6 @@ namespace WebAPI_PrintSystem.Controllers
                     }
                 };
 
-                // Filter students by faculty (in production, this filtering would be in the database query)
                 var filteredStudents = students.Where(s =>
                     faculty.ToLower() == "informatique" ||
                     faculty.ToLower() == "it" ||
@@ -78,14 +66,11 @@ namespace WebAPI_PrintSystem.Controllers
             }
         }
 
-        // Allocates printing quota to a specific student
-        // Used by faculty members to add credit to student accounts
         [HttpPost("allocate-quota")]
         public async Task<IActionResult> AllocateQuota([FromBody] FacultyQuotaRequest request)
         {
             try
             {
-                // Validate required fields
                 if (string.IsNullOrEmpty(request.Username) || request.Amount <= 0)
                 {
                     return BadRequest(new ApiResponse
@@ -95,7 +80,6 @@ namespace WebAPI_PrintSystem.Controllers
                     });
                 }
 
-                // Validate allocation limit (max 50 CHF per allocation for control)
                 if (request.Amount > 50)
                 {
                     return BadRequest(new ApiResponse
@@ -105,7 +89,6 @@ namespace WebAPI_PrintSystem.Controllers
                     });
                 }
 
-                // Add quota to student account
                 var result = await _sqlService.AddAmountAsync(request.Username, request.Amount);
 
                 if (result)
@@ -142,21 +125,18 @@ namespace WebAPI_PrintSystem.Controllers
             }
         }
 
-        // Generates quota summary statistics for a faculty
-        // Provides overview of total allocations, average per student, etc.
         [HttpGet("quota-summary/{faculty}")]
         public async Task<IActionResult> GetQuotaSummary(string faculty)
         {
             try
             {
-                // In production, calculate real statistics from database
                 var summary = new
                 {
                     Faculty = faculty,
-                    TotalStudents = 3, // Count from database
-                    TotalQuotaAllocated = 65.5f, // Sum from database in CHF
-                    AverageQuotaPerStudent = 21.8f, // Calculated average in CHF
-                    StudentsWithLowQuota = 1, // Count students with < 10 CHF
+                    TotalStudents = 3,
+                    TotalQuotaAllocated = 65.5f,
+                    AverageQuotaPerStudent = 21.8f,
+                    StudentsWithLowQuota = 1,
                     Currency = "CHF",
                     LastUpdated = DateTime.Now
                 };
